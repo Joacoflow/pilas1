@@ -1,1 +1,268 @@
 
+internal class Program
+    {
+        static void Main(string[] args)
+        {
+            Pila obj_pila = new Pila();
+            int opc;
+            string isbnx;
+            int codigox;
+
+            obj_pila.apilar(new Libro(100, "I1001", "ABC", 200, 150, 15));
+            obj_pila.apilar(new Libro(200, "I1002", "XYZ", 350, 250, 10));
+            obj_pila.apilar(new Libro(300, "I1003", "Tecnicas P", 140, 120, 80));
+
+            obj_pila.apilar(new Libro(400, "I1001", "ABC", 180, 180, 3));
+            do
+            {
+                Console.Clear();
+                obj_pila.menu();
+                opc = int.Parse(Console.ReadLine());
+
+                switch (opc)
+                {
+                    case 2:
+                        obj_pila.desapilar();
+                        obj_pila.mostrar_f1();
+
+                        Console.WriteLine("Operacion exitosa");
+                        break;
+                    case 3:
+                        obj_pila.mostrar_f2();
+                        break;
+                    case 4:
+                        Console.WriteLine("\tIngresar el codigo IBSN: ");
+                        isbnx = Console.ReadLine();
+                        Libro dato = obj_pila.Buscar_ISBN(isbnx);
+                        if (dato == null)
+                            Console.WriteLine("\tNodo no existe..!!");
+                        else
+                            Console.WriteLine("\tRegistro: \n" + dato);
+                        break;
+                    case 5:
+                        Console.WriteLine("\tIngresar el codigo de libro: ");
+                        codigox = int.Parse(Console.ReadLine());
+                        Libro eliminado = obj_pila.eliminar_codigo(codigox);
+                        if (eliminado == null)
+                            Console.WriteLine("\tNodo no existe... !!");
+                        else
+                            Console.WriteLine("\tRegistro eliminado: \n" + eliminado);
+                        break;
+                    case 6:
+                        obj_pila.ordenar_stock();
+                        obj_pila.mostrar_f2();
+                        break;
+                }
+                Console.ReadKey();
+                
+            } while (opc != 7);
+
+
+
+        }
+    }
+
+    internal class Nodo
+    {
+        public Libro dato;
+        public Nodo sgte;
+
+        public Nodo(Libro dato)
+        {
+            this.dato = dato;
+            this.sgte = null;
+        }
+    }
+
+    internal class Pila
+    {
+        public Nodo ini, fin;
+        public int tope, limite;
+
+        public Pila()
+        {
+            ini = null;
+            fin = null;
+            tope = 0;
+            limite = 10;
+        }
+        public Pila(int L)
+        {
+            ini = null;
+            fin = null;
+            tope = 0;
+            limite = L;
+        }
+
+        public void menu()
+        {
+            Console.WriteLine("\t*********MENU_PILA************");
+            Console.WriteLine("\t[1]Enpilar");
+            Console.WriteLine("\t[2]Desenpilar");
+            Console.WriteLine("\t[3]Mostrar Pila");
+            Console.WriteLine("\t[4]Buscar por ISBN");
+            Console.WriteLine("\t[5]Eliminar por codigo");
+            Console.WriteLine("\t[6]Ordenar Descen por Stock");
+            Console.WriteLine("\t[7]Salir");
+            Console.Write("\tIngresar opcion: ");
+        }
+        public bool estavacio()
+        {
+            return (tope == 0);
+        }
+
+        public bool estalleno()
+        {
+            return (tope == limite);
+        }
+        public void apilar(Libro datox)
+        {
+            Nodo nuevo_N = new Nodo(datox);
+            if (estavacio())
+            {
+                ini = nuevo_N;
+                fin = nuevo_N;
+            }
+            else
+            {
+                fin.sgte = nuevo_N;
+                fin = nuevo_N;
+            }
+            tope++;
+        }
+
+        public Libro desapilar()
+        {
+            Libro retirado = null;
+            if (!estavacio())
+            {
+                retirado = fin.dato;
+                if (ini == fin)
+                {
+                    ini = null;
+                    fin = null;
+                }
+                else
+                {
+                    Nodo aux;
+                    for (aux = ini; aux.sgte != fin; aux = aux.sgte) ;
+                    fin = aux;
+                    fin.sgte = null;
+                }
+                tope--;
+            }
+            return retirado;
+        }
+        public void mostrar_f1()
+        {
+            Nodo aux = ini;
+            while (aux != null)
+            {
+                Console.WriteLine(aux.dato);
+                aux = aux.sgte;
+            }
+            Console.WriteLine();
+        }
+
+        public void mostrar_f2()
+        {
+            Pila tmp = new Pila();
+            while (!estavacio())
+            {
+                Libro dato = desapilar();
+                tmp.apilar(dato);
+                Console.WriteLine(dato);
+            }
+            while (!tmp.estavacio())
+            {
+                apilar(tmp.desapilar());
+            }
+        }
+        public Libro Buscar_ISBN(string isbnx)
+        {
+            Libro encontrado = null;
+            if (!estavacio())
+            {
+                Pila tmp = new Pila();
+                while (!estavacio())
+                {
+                    Libro dato = desapilar();
+                    tmp.apilar(dato);
+                    if (dato.ISBN == isbnx)
+                    {
+                        encontrado = dato;
+                        break;
+                    }
+                }
+                while (!tmp.estavacio())
+                {
+                    apilar(tmp.desapilar());
+                }
+            }
+            return encontrado;
+        }
+
+        public Libro eliminar_codigo(int codigox)
+        {
+            Libro eliminado = null;
+            Pila tmp = new Pila();
+            while (!estavacio())
+            {
+                Libro dato = desapilar();
+                if (dato.Codigo == codigox)
+                {
+                    eliminado = dato;
+                    tope--;
+                    break;
+                }
+                tmp.apilar(dato);
+            }
+            while (!tmp.estavacio())
+            {
+                apilar(tmp.desapilar());
+            }
+            return eliminado;
+        }
+        public void ordenar_stock()
+        {
+            Pila tmp = new Pila();
+            while (!estavacio())
+            {
+                Libro dato = desapilar();
+                while (!tmp.estavacio() && tmp.fin.dato.stock < dato.stock)
+                {
+                    apilar(tmp.desapilar());
+                }
+                tmp.apilar(dato);
+            }
+            while (!tmp.estavacio())
+            {
+                apilar(tmp.desapilar());
+            }
+        }
+    }
+
+    internal class Libro
+    {
+        public int Codigo;
+        public string ISBN;
+        public string nombre;
+        public int paginas;
+        public double precio;
+        public int stock;
+
+        public Libro(int codigo, string iSBN, string nombre, int paginas, double precio, int stock)
+        {
+            Codigo = codigo;
+            ISBN = iSBN;
+            this.nombre = nombre;
+            this.paginas = paginas;
+            this.precio = precio;
+            this.stock = stock;
+        }
+        public override string ToString()
+        {
+            return String.Format("\tCodigo:" + Codigo + " ISBN: " +  ISBN + " Nombre: " +
+                nombre + " Paginas: " +  paginas + " Precio: " +  precio+ " Stock: " +  stock);
+        }
+    }
